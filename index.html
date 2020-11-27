@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<body>
+    <input type="text" id="name" />
+    <p name="status"></p>
+    <button type="button" onclick="sendName()">click</button>
+</body>
+<script>
+    var exampleSocket = new WebSocket("ws://localhost:5000");
+    /*
+    exampleSocket.onopen = function (event) {
+        exampleSocket.send("tom!"); 
+    };
+    */
+    exampleSocket.onmessage = function (event) {
+        console.log(JSON.parse(event.data));
+        //console.log(event.data);
+    }
+    
+    function sendName(){
+        exampleSocket.send(document.getElementById("name").value);
+    } 
+</script>
+
