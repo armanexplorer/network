@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+from aio_timers import Timer
 
 
 class Round:
@@ -70,13 +71,36 @@ async def notify_state():
         await asyncio.wait([player.ws.send(message) for player in players_list])
 
 
+async def callback():
+    round_winners_name = []
+
+    for p in players_list:
+        try:
+            if p.answer[round_counter - 1] == round_list[round_counter].answer:
+                round_winners_name.append(p.name)
+        except:
+            pass
+
+    message = json.dumps([ob.__dict__ for ob in round_winners_name])
+    await asyncio.wait([player.ws.send(message) for player in players_list])
+
+
 async def hello(websocket, path):
     name = await websocket.recv()
     await register(websocket, name)
     try:
+        while len(players_list) != 3:
+            message = json.dumps("Players aren't enough!")
+            await asyncio.wait([player.ws.send(message) for player in players_list])
+
+        # timer is scheduled here
+        timer = Timer(round_list[round_counter].time, callback)
+
+        # wait until the callback has been executed
+        await timer.wait()
+
         await websocket.send(state_event())
         async for message in websocket:
-
             # data = json.loads(message)
             for p in players_list:
                 if p.ws == websocket:
@@ -121,8 +145,7 @@ asyncio.get_event_loop().run_forever()
     # answers[name] = []
     # p.answer = []
 
-    # while len(players_list) != 3:
-    #    pass
+
 '''''
 '''''
     while True:
