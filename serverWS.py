@@ -23,9 +23,9 @@ class Player:
 
 round_counter = 1
 players_list = []
-round_list = [Round(round_number=1, url='', time=3, answer=10, rscore=5),
-              Round(round_number=2, url='', time=3, answer=11, rscore=10),
-              Round(round_number=2, url='', time=3, answer=12, rscore=15),
+round_list = [Round(round_number=1, url='', time=5, answer=10, rscore=5),
+              Round(round_number=2, url='', time=5, answer=11, rscore=10),
+              Round(round_number=2, url='', time=4, answer=12, rscore=15),
               Round(round_number=4, url='', time=3, answer=13, rscore=20),
               Round(round_number=3, url='', time=3, answer=14, rscore=25)]
 
@@ -44,19 +44,22 @@ async def unregister(websocket):
     p: Player
     for p in players_list:
         if p.ws == websocket:
+            leftmsg = f"{p.name} Left!"
+            print(f"> {leftmsg}")
             players_list.remove(p)
     await notify_users()
 
 
 def state_event():
+    global round_counter
     score_list = {}
     for p in players_list:
         score_list[p.name] = p.score
-    return json.dumps({"type": "round", "number": round_counter, "scores": score_list})
+    return json.dumps({"round": round_counter, "scores": score_list})
 
 
 def users_event():
-    return json.dumps({"type": "users", "count": len(players_list)})
+    return json.dumps({"users": len(players_list)})
 
 
 async def notify_users():
@@ -72,6 +75,7 @@ async def notify_state():
 
 
 async def callback():
+    global round_counter
     round_winners_name = []
 
     for p in players_list:
@@ -86,12 +90,15 @@ async def callback():
 
 
 async def hello(websocket, path):
+    global round_counter
     name = await websocket.recv()
     await register(websocket, name)
     try:
+        # await asyncio.sleep(10, result=None, *, loop=None)
         while len(players_list) != 3:
-            message = json.dumps("Players aren't enough!")
-            await asyncio.wait([player.ws.send(message) for player in players_list])
+            await asyncio.sleep(1)
+            # message = json.dumps("Players aren't enough!")
+            # await asyncio.wait([player.ws.send(message) for player in players_list])
 
         # timer is scheduled here
         timer = Timer(round_list[round_counter].time, callback)
@@ -102,6 +109,7 @@ async def hello(websocket, path):
         await websocket.send(state_event())
         async for message in websocket:
             # data = json.loads(message)
+            current_player = 0
             for p in players_list:
                 if p.ws == websocket:
                     current_player = p
@@ -114,6 +122,8 @@ async def hello(websocket, path):
                         break
 
             await notify_state()
+
+            round_counter += 1
 
             if round_counter == 6:
                 max_score = 0
