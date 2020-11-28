@@ -1,13 +1,15 @@
 import asyncio
+import traceback
+
 import websockets
 import json
 from aio_timers import Timer
 
 
 class Round:
-    def __init__(self, round_number, url, time, answer, rscore):
+    def __init__(self, round_number, bit_array, time, answer, rscore):
         self.round_number = round_number
-        self.url = url
+        self.bit_array = bit_array
         self.time = time
         self.answer = answer
         self.rscore = rscore
@@ -25,11 +27,13 @@ round_counter = 1
 t = 3
 x = 3
 players_list = []
-round_list = [Round(round_number=1, url='', time=10, answer=10, rscore=5),
-              Round(round_number=2, url='', time=10, answer=11, rscore=10),
-              Round(round_number=3, url='', time=10, answer=12, rscore=15),
-              Round(round_number=4, url='', time=10, answer=13, rscore=20),
-              Round(round_number=5, url='', time=10, answer=14, rscore=25)]
+bit_array = []
+array1=
+round_list = [Round(round_number=1, bit_array=bit_array[0], time=15, answer=10, rscore=5),
+              Round(round_number=2, bit_array=bit_array[1], time=15, answer=11, rscore=10),
+              Round(round_number=3, bit_array=bit_array[2], time=15, answer=12, rscore=15),
+              Round(round_number=4, bit_array=bit_array[3], time=15, answer=13, rscore=20),
+              Round(round_number=5, bit_array=bit_array[4], time=15, answer=14, rscore=25)]
 
 
 async def register(websocket, name):
@@ -92,25 +96,34 @@ async def notify_state_submit(cp):
     await asyncio.wait([player.ws.send(message) for player in players_list])
 
 
-async def callback():
+def exception_to_string(excp):
+    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=??
+    pretty = traceback.format_list(stack)
+    return ''.join(pretty) + '\n  {} {}'.format(excp.__class__, excp)
+
+
+async def callback(task2):
     global round_counter
     global round_list
     global players_list
     round_winners_name = []
+    try:
+        await asyncio.sleep(round_list[round_counter-1].time)
+        for p in players_list:
 
-    await asyncio.sleep(round_list[round_counter].time)
-    for p in players_list:
+            try:
+                if p.answer[round_counter - 1] == round_list[round_counter].answer:
+                    round_winners_name.append(p.name)
+            except:
+                pass
+        # print("after a round: ")
+        print(f"time over")
+        task2.cancel()
+        await notify_state()
+        round_plus()
+    except Exception as e:
+        print(exception_to_string(e))
 
-        try:
-            if p.answer[round_counter - 1] == round_list[round_counter].answer:
-                round_winners_name.append(p.name)
-        except:
-            pass
-
-    # print("after a round: ")
-    print(f"time over")
-    await notify_state()
-    round_plus()
     # message = json.dumps([ob.__dict__ for ob in round_winners_name])
     #
     # print("winners: ")
@@ -131,7 +144,6 @@ def round_plus():
 
 
 async def answer(websocket):
-
     message = await websocket.recv()
     print("after answer msg await")
     # async for message in websocket:
@@ -162,19 +174,19 @@ async def hello(websocket, path):
     # try:
     while len(players_list) != 3:
         await asyncio.sleep(1)
-    # while round_counter < 6:
-    print(f"start")
-    try:
-        task1 = asyncio.create_task(callback())
-        task2 = asyncio.create_task(answer(websocket))
 
-        await task1
-        await task2
+    while round_counter < 3:
+        print(f"start")
+        try:
+            task2 = asyncio.create_task(answer(websocket))
+            task1 = asyncio.create_task(callback(task2))
+            await task1
+            await task2
+        except:
+            print("****")
+        print("end of while")
 
-    except:
-        print("****")
-
-    if round_counter == 6:
+    if round_counter == 3:
         max_score = 0
         winners_name = []
 
@@ -185,13 +197,18 @@ async def hello(websocket, path):
             if p.score == max_score:
                 winners_name.append(p.name)
 
-        message = json.dumps([ob.__dict__ for ob in winners_name])
+        score_list = {}
+        for p in players_list:
+            score_list[p.name] = p.score
+
+        message = json.dumps({"winner": winners_name, "scores": score_list})
         await asyncio.wait([player.ws.send(message) for player in players_list])
 
         await unregister(websocket)
 
-    # finally:
-    #     await unregister(websocket)
+
+# finally:
+#     await unregister(websocket)
 
 
 start_server = websockets.serve(hello, "localhost", 5000)
