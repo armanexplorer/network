@@ -1,9 +1,9 @@
 import asyncio
 import traceback
-
+import random
 import websockets
 import json
-from aio_timers import Timer
+# from aio_timers import Timer
 
 
 class Round:
@@ -22,18 +22,35 @@ class Player:
         self.score = 0
         self.ws = ws
 
-
-round_counter = 1
 t = 3
 x = 3
 players_list = []
-bit_array = []
-array1=
+round_counter = 1
+
+MIN_PLAYER = 3
+TOTAL_TURNS = 5
+ROW_NUMBER = 10
+COL_NUMBER = 10
+
+bit_array = list()
+colors = [0,1]      # 0 is grey and 1 is blue
+for i in range(TOTAL_TURNS):
+    l = list()
+    for j in range(ROW_NUMBER):
+        l.append(random.choices(colors, weights=[1,1], k=COL_NUMBER))
+    bit_array.append(l)
+
 round_list = [Round(round_number=1, bit_array=bit_array[0], time=15, answer=10, rscore=5),
               Round(round_number=2, bit_array=bit_array[1], time=15, answer=11, rscore=10),
               Round(round_number=3, bit_array=bit_array[2], time=15, answer=12, rscore=15),
               Round(round_number=4, bit_array=bit_array[3], time=15, answer=13, rscore=20),
               Round(round_number=5, bit_array=bit_array[4], time=15, answer=14, rscore=25)]
+
+
+def exception_to_string(excp):
+    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=??
+    pretty = traceback.format_list(stack)
+    return ''.join(pretty) + '\n  {} {}'.format(excp.__class__, excp)
 
 
 async def register(websocket, name):
@@ -94,12 +111,6 @@ async def notify_state_submit(cp):
     # print("after a submit: ")
     # print(message)
     await asyncio.wait([player.ws.send(message) for player in players_list])
-
-
-def exception_to_string(excp):
-    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=??
-    pretty = traceback.format_list(stack)
-    return ''.join(pretty) + '\n  {} {}'.format(excp.__class__, excp)
 
 
 async def callback(task2):
@@ -172,21 +183,21 @@ async def hello(websocket, path):
     name = await websocket.recv()
     await register(websocket, name)
     # try:
-    while len(players_list) != 3:
+    while len(players_list) != MIN_PLAYER:
         await asyncio.sleep(1)
 
-    while round_counter < 3:
-        print(f"start")
+    while round_counter < TOTAL_TURNS:
+        print("start")
         try:
             task2 = asyncio.create_task(answer(websocket))
             task1 = asyncio.create_task(callback(task2))
             await task1
             await task2
         except:
-            print("****")
+            pass
         print("end of while")
 
-    if round_counter == 3:
+    if round_counter == TOTAL_TURNS:
         max_score = 0
         winners_name = []
 
