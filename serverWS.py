@@ -23,6 +23,7 @@ class Player:
 
 round_counter = 1
 t = 3
+x = 3
 players_list = []
 round_list = [Round(round_number=1, url='', time=10, answer=10, rscore=5),
               Round(round_number=2, url='', time=10, answer=11, rscore=10),
@@ -70,11 +71,18 @@ async def notify_users():
 
 
 async def notify_state():
-    if players_list:  # asyncio.wait doesn't accept an empty list
-        message = state_event()
-        # print("inside notify_state")
-        print(message)
-        await asyncio.wait([player.ws.send(message) for player in players_list])
+    global x
+    if x == 3:
+        x -= 1
+    elif x == 2:
+        x -= 1
+    else:
+        x = 3
+        if players_list:  # asyncio.wait doesn't accept an empty list
+            message = state_event()
+            # print("inside notify_state")
+            print(message)
+            await asyncio.wait([player.ws.send(message) for player in players_list])
 
 
 async def notify_state_submit(cp):
@@ -90,7 +98,7 @@ async def callback():
     global players_list
     round_winners_name = []
 
-    await asyncio.sleep(5)
+    await asyncio.sleep(round_list[round_counter].time)
     for p in players_list:
 
         try:
@@ -102,6 +110,7 @@ async def callback():
     # print("after a round: ")
     print(f"time over")
     await notify_state()
+    round_plus()
     # message = json.dumps([ob.__dict__ for ob in round_winners_name])
     #
     # print("winners: ")
@@ -142,7 +151,6 @@ async def answer(websocket):
     # notify
     # print("before notify_state")
     await notify_state_submit(current_player)
-    round_plus()
 
 
 async def hello(websocket, path):
