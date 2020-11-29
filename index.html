@@ -144,6 +144,14 @@
 					
 					//alert(`player: ${msg.player_name}\n` + msg.answer)
 				}
+				if("winner" in msg)
+				{
+					$("#myboxx").text(`scores: ${JSON.stringify(msg.scores)} ///// winner: ${JSON.stringify(msg.winner)}`);
+					//$("#myboxx").text("fdsafdafasdf");
+					$( "div.success" ).fadeIn( 300 ).delay( 1500 ).fadeOut( 5000 );
+					
+					//alert(`player: ${msg.player_name}\n` + msg.answer)
+				}
 			}
 				
 					

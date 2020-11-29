@@ -1,6 +1,6 @@
 import random
 
-TOTAL_TURNS = 1
+TOTAL_TURNS = 2
 ROW_NUMBER = 4
 COL_NUMBER = 20
 bit_array = list()
