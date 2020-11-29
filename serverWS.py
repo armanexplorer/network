@@ -32,7 +32,7 @@ MIN_PLAYER = 3
 TOTAL_TURNS = 5
 ROW_NUMBER = 4
 COL_NUMBER = 20
-CONST_TIME_TO_ANSWER = 15
+CONST_TIME_TO_ANSWER = 30
 
 bit_array = list()
 colors = [0,1]      # 0 is grey and 1 is blue
@@ -74,8 +74,8 @@ async def unregister(websocket):
     p: Player
     for p in players_list:
         if p.ws == websocket:
-            leftmsg = f"{p.name} Left!"
-            print(f"> {leftmsg}")
+            # leftmsg = f"{p.name} Left!"
+            # print(f"> {leftmsg}")
             players_list.remove(p)
     await notify_users()
 
@@ -135,7 +135,7 @@ async def callback(task2):
             except:
                 pass
         # print("after a round: ")
-        print(f"time over")
+        # print(f"time over")
         task2.cancel()
         await notify_state()
         round_plus()
@@ -163,7 +163,7 @@ def round_plus():
 
 async def answer(websocket):
     message = await websocket.recv()
-    print("after answer msg await")
+    # print("after answer msg await")
     # async for message in websocket:
     current_player = 0
     for p in players_list:
@@ -202,7 +202,7 @@ async def hello(websocket, path):
             "data": bit_array[round_counter-1]
         }
         await websocket.send(json.dumps(main_packet))
-        print("start")
+        # print("start")
         try:
             task2 = asyncio.create_task(answer(websocket))
             task1 = asyncio.create_task(callback(task2))
@@ -210,7 +210,7 @@ async def hello(websocket, path):
             await task2
         except:
             pass
-        print("end of while")
+        # print("end of while")
 
     if round_counter == TOTAL_TURNS:
         max_score = 0
