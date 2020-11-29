@@ -1,4 +1,5 @@
 import asyncio
+from random import Random
 import traceback
 import random
 import websockets
@@ -35,17 +36,22 @@ CONST_TIME_TO_ANSWER = 15
 
 bit_array = list()
 colors = [0,1]      # 0 is grey and 1 is blue
+init_answers = []
 for i in range(TOTAL_TURNS):
     l = list()
+    s = 0
     for j in range(ROW_NUMBER):
-        l.append(random.choices(colors, weights=[1,1], k=COL_NUMBER))
+        ans_num_in_row = random.choice(range(5,10))
+        s += ans_num_in_row
+        l.append(random.choices(colors, weights=[COL_NUMBER-ans_num_in_row,ans_num_in_row], k=COL_NUMBER))
     bit_array.append(l)
+    init_answers.append(s)
 
-round_list = [Round(round_number=1, bit_array=bit_array[0], time=CONST_TIME_TO_ANSWER, answer=10, rscore=5),
-              Round(round_number=2, bit_array=bit_array[1], time=CONST_TIME_TO_ANSWER, answer=11, rscore=10),
-              Round(round_number=3, bit_array=bit_array[2], time=CONST_TIME_TO_ANSWER, answer=12, rscore=15),
-              Round(round_number=4, bit_array=bit_array[3], time=CONST_TIME_TO_ANSWER, answer=13, rscore=20),
-              Round(round_number=5, bit_array=bit_array[4], time=CONST_TIME_TO_ANSWER, answer=14, rscore=25)]
+round_list = [Round(round_number=1, bit_array=bit_array[0], time=CONST_TIME_TO_ANSWER, answer=init_answers[0], rscore=5),
+              Round(round_number=2, bit_array=bit_array[1], time=CONST_TIME_TO_ANSWER, answer=init_answers[1], rscore=10),
+              Round(round_number=3, bit_array=bit_array[2], time=CONST_TIME_TO_ANSWER, answer=init_answers[2], rscore=15),
+              Round(round_number=4, bit_array=bit_array[3], time=CONST_TIME_TO_ANSWER, answer=init_answers[3], rscore=20),
+              Round(round_number=5, bit_array=bit_array[4], time=CONST_TIME_TO_ANSWER, answer=init_answers[4], rscore=25)]
 
 
 def exception_to_string(excp):
@@ -108,7 +114,7 @@ async def notify_state():
 
 
 async def notify_state_submit(cp):
-    message = json.dumps({"player name": cp.name, "answer": cp.answer[round_counter - 1]})
+    message = json.dumps({"player_name": cp.name, "answer": cp.answer[round_counter - 1]})
     # print("after a submit: ")
     # print(message)
     await asyncio.wait([player.ws.send(message) for player in players_list])
