@@ -32,7 +32,7 @@ MIN_PLAYER = 3
 TOTAL_TURNS = 5
 ROW_NUMBER = 4
 COL_NUMBER = 20
-CONST_TIME_TO_ANSWER = 3
+CONST_TIME_TO_ANSWER = 30
 
 bit_array = list()
 colors = [0,1]      # 0 is grey and 1 is blue
