@@ -80,6 +80,9 @@
 	<br><br>
 	<button id="send_ans_btn" class="btn btn-primary d-inline-flex flex-row align-items-center send-answer-btn">SEND</button>
 </div>
+<br><br>
+<div class="alert-box success" id="myboxx"></div>
+
 
 
 <!-- <img class="w3-animate-fading" src="img_rr_01.jpg" style="width:100%"> -->
@@ -132,6 +135,14 @@
 					scores = JSON.stringify(msg.scores)
 					//scores = scores.replace(',', '\n');
 					$("#cur_scores").text(scores);
+				}
+				if("answer" in msg)
+				{
+					$("#myboxx").text(`player: ${msg.player_name} ---> ans: ${msg.answer}`);
+					//$("#myboxx").text("fdsafdafasdf");
+					$( "div.success" ).fadeIn( 300 ).delay( 1500 ).fadeOut( 400 );
+					
+					//alert(`player: ${msg.player_name}\n` + msg.answer)
 				}
 			}
 				
