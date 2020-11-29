@@ -29,8 +29,9 @@ round_counter = 1
 
 MIN_PLAYER = 3
 TOTAL_TURNS = 5
-ROW_NUMBER = 10
-COL_NUMBER = 10
+ROW_NUMBER = 4
+COL_NUMBER = 20
+CONST_TIME_TO_ANSWER = 15
 
 bit_array = list()
 colors = [0,1]      # 0 is grey and 1 is blue
@@ -40,11 +41,11 @@ for i in range(TOTAL_TURNS):
         l.append(random.choices(colors, weights=[1,1], k=COL_NUMBER))
     bit_array.append(l)
 
-round_list = [Round(round_number=1, bit_array=bit_array[0], time=15, answer=10, rscore=5),
-              Round(round_number=2, bit_array=bit_array[1], time=15, answer=11, rscore=10),
-              Round(round_number=3, bit_array=bit_array[2], time=15, answer=12, rscore=15),
-              Round(round_number=4, bit_array=bit_array[3], time=15, answer=13, rscore=20),
-              Round(round_number=5, bit_array=bit_array[4], time=15, answer=14, rscore=25)]
+round_list = [Round(round_number=1, bit_array=bit_array[0], time=CONST_TIME_TO_ANSWER, answer=10, rscore=5),
+              Round(round_number=2, bit_array=bit_array[1], time=CONST_TIME_TO_ANSWER, answer=11, rscore=10),
+              Round(round_number=3, bit_array=bit_array[2], time=CONST_TIME_TO_ANSWER, answer=12, rscore=15),
+              Round(round_number=4, bit_array=bit_array[3], time=CONST_TIME_TO_ANSWER, answer=13, rscore=20),
+              Round(round_number=5, bit_array=bit_array[4], time=CONST_TIME_TO_ANSWER, answer=14, rscore=25)]
 
 
 def exception_to_string(excp):
@@ -186,7 +187,15 @@ async def hello(websocket, path):
     while len(players_list) != MIN_PLAYER:
         await asyncio.sleep(1)
 
+  
+    
+
     while round_counter < TOTAL_TURNS:
+        main_packet = {
+            "init": True,
+            "data": bit_array[round_counter-1]
+        }
+        await websocket.send(json.dumps(main_packet))
         print("start")
         try:
             task2 = asyncio.create_task(answer(websocket))

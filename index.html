@@ -1,23 +1,202 @@
-<!DOCTYPE html>
-<body>
-    <input type="text" id="name" />
-    <p name="status"></p>
-    <button type="button" onclick="sendName()">click</button>
-</body>
-<script>
-    var exampleSocket = new WebSocket("ws://localhost:5000");
-    /*
-    exampleSocket.onopen = function (event) {
-        exampleSocket.send("tom!"); 
-    };
-    */
-    exampleSocket.onmessage = function (event) {
-        console.log(JSON.parse(event.data));
-        //console.log(event.data);
-    }
-    
-    function sendName(){
-        exampleSocket.send(document.getElementById("name").value);
-    } 
-</script>
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Count</title>
+    <meta name="description"
+          content="Knight is a beautiful Bootstrap 4 template for product landing pages."/>
 
+    <!--Inter UI font-->
+    <link href="https://rsms.me/inter/inter-ui.css" rel="stylesheet">
+
+    <!--vendors styles-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+	
+	<!--stars-->
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
+	
+	<!--fade out image-->
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <!-- Bootstrap CSS / Color Scheme -->
+    <link rel="stylesheet" href="css/cyan.css" id="theme-color">
+</head>
+<body>
+
+<!--stars-->
+<div id="background"></div>
+<div id="midground"></div>
+<div id="foreground"></div>
+<div id="page-wrap">
+
+<!--hero header-->
+<section class="py-7 py-md-0" id="home">
+    <div class="container">
+        <div class="row" style="padding-top:100px">
+            <div class="col-md-8 col-sm-10 col-12 mx-auto my-auto text-center">
+				
+				
+				<h1 class="heading-black text-capitalize" >Welcome to <span style="color:#00e5ff">G</span>reedy <span style="color:#00e5ff">C</span>ounting</h1>
+                
+				<input type="text" id="pname" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" style="background:transparent; color: white" placeholder="Enter your name here">
+				<br><br>
+                <button class="btn btn-primary d-inline-flex flex-row align-items-center" id="send_name">
+                    start the game
+                    <em class="ml-2" data-feather="arrow-right"></em>
+                </button>
+				
+				
+            </div>
+        </div>
+    </div>
+</section>
+</div>
+<!--faq section-->
+<section class="py-7" id="faq" style="margin-top:300px;padding-top:50px !important;">
+<div class="container">
+        <div class="row">
+            <div class="col-md-6 mx-auto text-center">
+                <h2 style="padding-top:0;display:none;" id="hero-image">How Many Squares Do You See In The Following Picture?</h2>
+            </div>
+        </div>
+		
+</div>
+
+<br><br>
+
+<div id="my_square"></div>
+<br><br>
+<div class="scores" id="scores">
+	<p>scores:</p>
+	<p id="cur_scores"></p>
+</div>
+<div id="ans_block" class="answer" style="display: none;">
+	<input id="ans_input" type="text" class="form-control answer-input" aria-label="Small" 
+	aria-describedby="inputGroup-sizing-sm" placeholder="Enter Answer">
+	<br><br>
+	<button id="send_ans_btn" class="btn btn-primary d-inline-flex flex-row align-items-center send-answer-btn">SEND</button>
+</div>
+
+
+<!-- <img class="w3-animate-fading" src="img_rr_01.jpg" style="width:100%"> -->
+</section>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+<!--scroll to top-->
+<div class="scroll-top">
+    <i class="fa fa-angle-up" aria-hidden="true"></i>
+</div>
+
+
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.7.3/feather.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+<script src="js/scripts.js"></script>
+<script>
+	var exampleSocket;
+	var q = []
+	$("#send_name").click(function() {
+		$('html,body').animate({
+			scrollTop: $("#faq").offset().top},
+			'slow'
+		);
+		exampleSocket = new WebSocket("ws://localhost:5000");
+		//alert($("#pname").val())
+		exampleSocket.onopen = function (event) {
+			exampleSocket.send($("#pname").val()); 
+		};
+		$("#ans_block").show()
+		$("#hero-image").fadeIn(3000);
+		exampleSocket.onmessage = function (event) {
+			//q.push(JSON.parse(event.data))
+			msg = JSON.parse(event.data);
+			console.log(JSON.parse(event.data));
+			if(typeof msg == 'object')
+			{
+				if("init" in msg)
+				{
+					console.log(msg.data);
+					do_colering(msg.data);
+				}
+				if("round" in msg)
+				{
+					//alert(msg.scores);
+					scores = JSON.stringify(msg.scores)
+					//scores = scores.replace(',', '\n');
+					$("#cur_scores").text(scores);
+				}
+			}
+				
+					
+		}
+	});
+	$("#send_ans_btn").click(function(){
+		//alert($("#ans_input").val());
+		exampleSocket.send($("#ans_input").val());
+	});
+	
+	/*
+	$("#hero-image").scorll(function(){
+		
+	});
+	*/
+	var ROW_NUMBER = 4
+	var COL_NUMBER = 20
+	var big_square = document.getElementById("my_square")
+	var node;
+	for(var i=0;i<ROW_NUMBER;i++){
+		node = document.createElement("div");
+		big_square.appendChild(node);
+		node.className = "square first-col";
+		node.id = `sq${i}${0}`;
+		
+		for(var j=1;j<COL_NUMBER;j++){
+			node = document.createElement("div");
+			node.className = "square";
+			big_square.appendChild(node);
+			node.id = `sq${i}${j}`;
+		}
+	}
+	
+	function create_random_bit_array(){
+		var arr = [];
+		for(var i=0;i<ROW_NUMBER;i++)
+		{
+			arr[i] = [];
+			for(var j=0;j<COL_NUMBER;j++)
+				arr[i][j] = Math.floor((Math.random() * 1000)) % 2;
+		}
+		return arr;
+	}
+	
+	var square_colors = ["grey","blue"] 		//first is grey and second is primary
+	
+	function do_colering(bit_color_array){
+		//var arr = create_random_bit_array();
+		//console.log(arr);
+		for(var i=0;i<ROW_NUMBER;i++){
+			for(var j=0;j<COL_NUMBER;j++){
+				$(`#sq${i}${j}`).removeClass("blue");
+				$(`#sq${i}${j}`).removeClass("grey");
+				$(`#sq${i}${j}`).addClass(square_colors[bit_color_array[i][j]]);
+				//console.log("yes");
+			}
+		}
+	}
+	
+	$().ready(function(){
+		
+	});
+	
+
+</script>
+</body>
+</html>
